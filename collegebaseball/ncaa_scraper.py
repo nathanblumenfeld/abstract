@@ -14,7 +14,7 @@ import numpy as np
 #LOOKUP PATHS
 _SCHOOL_ID_LU_PATH = 'collegebaseball/data/schools.parquet'
 _SEASON_ID_LU_PATH = 'collegebaseball/data/seasons.parquet'
-_PLAYER_HISTORY_LU_PATH = 'collegebaseball/data/players_history_new_2.parquet'
+_PLAYER_HISTORY_LU_PATH = 'collegebaseball/data/players_history_new_3.parquet'
 _PLAYER_LU_PATH = 'collegebaseball/data/player_seasons.csv'
 
 #GET request options
@@ -764,7 +764,7 @@ def lookup_player_id(player_name, school):
     player_row = player_row.loc[df.school_id == school_id]
         
     if len(player_row) == 0:
-        return f'''could not find player {name}'''
+        return f'''could not find player {player_name}'''
     else: 
         return player_row['player_id'].values[0]
         

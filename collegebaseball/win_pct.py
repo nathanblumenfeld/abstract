@@ -63,4 +63,4 @@ def calculate_pythagenpat_win_pct(school, games):
         demoninator = (runs_scored_total ** x) + (runs_allowed_total ** x)
         res = numerator / demoninator
         
-    return round(res, _ROUND_TO), total_run_difference;
+    return round(res, _ROUND_TO), total_run_difference

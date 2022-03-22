@@ -50,25 +50,3 @@ if __name__ == '__main__':
     app.add_loader_app(LoadingApp())
 
     app.run()
-    
-    #     form = st.form(key="history_input")
-#     col1, col2, col3, col4, col5 = st.columns([1, .5, 2,.5, .5])
-    
-#     with col1: 
-#         school = form.selectbox('School', options=school_options, key='school_select')
-#         school_row = school_lookup.loc[school_lookup.school == school]
-#         valid_seasons = school_row.valid_seasons.values[0].copy()
-#         valid_seasons.sort()
-#         min_season = school_row['min_season'].values[0]
-#         max_season = school_row['max_season'].values[0]
-#     with col2: 
-#         st.write('')
-#     with col3: 
-#         start, end = form.select_slider('Seasons', options=valid_seasons, value=(min_season, max_season), key='seasons_slider')
-#         season_input = [x for x in valid_seasons if ((x >= start) and (x <= end))]
-#     with col4: 
-#         st.write('')
-#     with col5: 
-#         st.markdown('#')
-#         submit = form.form_submit_button("submit", on_click=form_callback)        
-               
