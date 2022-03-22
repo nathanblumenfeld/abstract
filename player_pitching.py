@@ -130,6 +130,7 @@ class PlayerPitchingApp(HydraHeadApp):
                 st.plotly_chart(create_dotplot(all_stats, player_name, metrics2), use_container_width=True)
                 st.write('')
                 st.plotly_chart(create_scatter(all_stats, 'BF', 'FIP', player_name), use_container_width=True)
-                st.write('')
             except: 
-                st.write('no records found')
+                st.warning('no records found')
+            st.write('')
+            st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')

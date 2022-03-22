@@ -33,8 +33,6 @@ def create_scatter(data, metric1, metric2, player):
     fig = px.scatter(data, x=metric1, y=metric2, color='season', template='seaborn', color_discrete_sequence= px.colors.qualitative.T10)
     fig.update_layout(
         title = str(player)+', '+str(metric2)+' vs '+str(metric1),
-        title_yanchor = "top",
-        title_x = 0.5,
         xaxis_title=str(metric1),
         yaxis_title=str(metric2)
     )
@@ -98,32 +96,35 @@ class PlayerBattingApp(HydraHeadApp):
             player_batting_submit = col3.form_submit_button('submit')
             
         if player_batting_submit:
-            stats = ncaa.get_career_stats(player_id, 'batting')
-            all_stats = metrics.add_batting_metrics(stats).sort_values(by='season')
-            st.dataframe(all_stats)
-            rate_stats = all_stats[['season', 'PA', 'wOBA', 'OPS', 'OBP', 'SLG','BA', 'ISO', 'K%', 'BB%', 'BABIP', 'HR/PA']]
-            counting_stats = all_stats[['season', 'PA', 'AB', '1B', '2B', '3B', 'HR', 'H', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'SF', 'SH', 'DP']]
-            col1, col2, col3= st.columns([3,2,10])
-            col1.markdown('### Rate Stats')
-            rate_stats_csv = convert_df(rate_stats)
-            col2.write('')
-            col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
-            col3.write('')
-            st.dataframe(rate_stats)
-            st.write('')
-            col1, col2, col3 = st.columns([3,2,10])
-            col1.markdown('### Counting Stats')
-            counting_stats_csv = convert_df(counting_stats)
-            col2.write('')
-            col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
-            col3.write('')
-            st.dataframe(counting_stats)
-            metrics1 = {'K%':'indianred', 'BB%':'dodgerblue', 
-               'SLG':'crimson', 'OBP':'darkorchid',
-               'wOBA':'darkorange', 'BA':'darkblue',
-               'BABIP':'forestgreen', 'ISO':'tan'}
-            st.plotly_chart(create_dotplot(all_stats, player_name, metrics1), use_container_width=True)
-            st.write('')           
-            st.plotly_chart(create_scatter(all_stats, 'PA', 'wOBA', player_name), use_container_width=True)
-            st.write('')
-            # st.write('no records found')
+            try:
+                stats = ncaa.get_career_stats(player_id, 'batting')
+                all_stats = metrics.add_batting_metrics(stats).sort_values(by='season')
+                rate_stats = all_stats[['season', 'PA', 'wOBA', 'OPS', 'OBP', 'SLG','BA', 'ISO', 'K%', 'BB%', 'BABIP', 'HR/PA']]
+                counting_stats = all_stats[['season', 'PA', 'AB', '1B', '2B', '3B', 'HR', 'H', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'SF', 'SH', 'DP']]
+                col1, col2, col3= st.columns([3,2,10])
+                col1.markdown('### Rate Stats')
+                rate_stats_csv = convert_df(rate_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(rate_stats)
+                st.write('')
+                col1, col2, col3 = st.columns([3,2,10])
+                col1.markdown('### Counting Stats')
+                counting_stats_csv = convert_df(counting_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(counting_stats)
+                metrics1 = {'K%':'indianred', 'BB%':'dodgerblue', 
+                'SLG':'crimson', 'OBP':'darkorchid',
+                'wOBA':'darkorange', 'BA':'darkblue',
+                'BABIP':'forestgreen', 'ISO':'tan'}
+                st.plotly_chart(create_dotplot(all_stats, player_name, metrics1), use_container_width=True)
+                st.write('')           
+                st.plotly_chart(create_scatter(all_stats, 'PA', 'wOBA', player_name), use_container_width=True)
+                st.write('')
+            except: 
+                st.warning('no records found')
+            st.write('')          
+            st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')

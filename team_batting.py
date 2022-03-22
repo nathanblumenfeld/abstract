@@ -13,6 +13,11 @@ from PIL import Image
 from hydralit import HydraHeadApp
 
 
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv(index=False).encode('utf-8')
+
     
 def load_school_lookup(): 
     return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
@@ -110,11 +115,32 @@ class TeamBattingApp(HydraHeadApp):
             team_batting_submit = col4.form_submit_button('submit')
 
         if team_batting_submit:
-            raw_stats = ncaa.get_team_stats(school, season, 'batting')
-            all_stats = metrics.add_batting_metrics(raw_stats)
-            rate_stats = all_stats[['name', 'Yr', 'pos', 'PA', 'wOBA', 'OPS', 'K%', 'BB%', 'SLG', 'OBP', 'BA', 'BABIP', 'ISO']]
-            counting_stats = all_stats[['name', 'Yr', 'pos', 'GP', 'PA', 'AB', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'K']]
-            st.dataframe(rate_stats)
-            st.dataframe(counting_stats)
-            st.plotly_chart(create_dotplot(all_stats, school, season), use_container_width=True)
-            st.plotly_chart(create_histogram_new(all_stats, 'wOBA', school, season), use_container_width=True)
+            try: 
+                raw_stats = ncaa.get_team_stats(school, season, 'batting')
+                all_stats = metrics.add_batting_metrics(raw_stats)
+                rate_stats = all_stats[['name', 'Yr', 'pos', 'PA', 'wOBA', 'OPS', 'K%', 'BB%', 'SLG', 'OBP', 'BA', 'BABIP', 'ISO']]
+                counting_stats = all_stats[['name', 'Yr', 'pos', 'GP', 'PA', 'AB', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'K']]
+                col1, col2, col3= st.columns([3,2,10])
+                col1.markdown('### Rate Stats')
+                rate_stats_csv = convert_df(rate_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(
+                    school)+'_rate_stats_'+str(season)+'.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(rate_stats)
+                col1, col2, col3= st.columns([3,2,10])
+                col1.markdown('### Counting Stats')
+                counting_stats_csv = convert_df(counting_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(
+                    school)+'_counting_stats_'+str(season)+'.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(counting_stats)
+                st.write('')
+                st.plotly_chart(create_dotplot(all_stats, school, season), use_container_width=True)
+                st.write('')
+                st.plotly_chart(create_histogram_new(all_stats, 'wOBA', school, season), use_container_width=True)
+            except: 
+                st.warning('no records found')
+            st.write('')          
+            st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')

@@ -93,46 +93,48 @@ class TeamHistoryApp(HydraHeadApp):
             is_submitted = col5.form_submit_button('submit')
 
         if is_submitted: 
-            games = filter_games(school, season_input)
-            actuals = win_pct.calculate_actual_win_pct(school, games = games)
-            expecteds = win_pct.calculate_pythagenpat_win_pct(school, games = games)
-            col1, col2, col3, col4, col5, col6 = st.columns([.5, 1, 1, 1, 1, .1])
-            with col1: 
-                st.write('')
-            with col2: 
-                st.metric(label="Record", value=str(actuals[1])+'-'+str(actuals[3])+'-'+str(actuals[2]))
-            with col3: 
-                st.metric(label="Run Differential", value=str(expecteds[1]))
-            with col4: 
-                st.metric(label="Winning %: ", value=str(actuals[0]))
-            with col5: 
-                st.metric(label="PythagenPat Expected Winning %: ", value=str(expecteds[0]))
-            with col6: 
-                st.write('')
-                
-            hide_dataframe_row_index = """
-                    <style>
-                    .row_heading.level0 {display:none}
-                    .blank {display:none}
-                    </style>
-                    """
-            col1, col2, col3 = st.columns([.5, 5, .5])
-            with col1: 
-                st.write('')
-            with col2: 
-                st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-                games_display = games[['date', 'opponent', 'runs_scored', 'runs_allowed', 'run_difference', 'season']]
-                st.dataframe(games_display.style.bar(align = 'mid', subset=['run_difference', 'runs_scored', 'runs_allowed'], color=['#C05353', '#67A280']))
-            with col3: 
-                st.write('')
-                
-            col1, col2, col3 = st.columns([.5, 5, .5])
-            with col1: 
-                st.write('')
-            with col2: 
-                st.plotly_chart(create_sparklines(games), use_container_width=True)
-            with col3: 
-                st.write('')
-            
-            # ncaa.get_multiyear_roster(school, 
-            
+            try: 
+                games = filter_games(school, season_input)
+                actuals = win_pct.calculate_actual_win_pct(school, games = games)
+                expecteds = win_pct.calculate_pythagenpat_win_pct(school, games = games)
+                col1, col2, col3, col4, col5, col6 = st.columns([.5, 1, 1, 1, 1, .1])
+                with col1: 
+                    st.write('')
+                with col2: 
+                    st.metric(label="Record", value=str(actuals[1])+'-'+str(actuals[3])+'-'+str(actuals[2]))
+                with col3: 
+                    st.metric(label="Run Differential", value=str(expecteds[1]))
+                with col4: 
+                    st.metric(label="Winning %: ", value=str(actuals[0]))
+                with col5: 
+                    st.metric(label="PythagenPat Expected Winning %: ", value=str(expecteds[0]))
+                with col6: 
+                    st.write('')
+                    
+                hide_dataframe_row_index = """
+                        <style>
+                        .row_heading.level0 {display:none}
+                        .blank {display:none}
+                        </style>
+                        """
+                col1, col2, col3 = st.columns([2, 5, 2])
+                with col1: 
+                    st.write('')
+                with col2: 
+                    st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+                    games_display = games[['date', 'opponent', 'runs_scored', 'runs_allowed', 'run_difference', 'season']]
+                    st.dataframe(games_display.style.bar(align = 'mid', subset=['run_difference', 'runs_scored', 'runs_allowed'], color=['#C05353', '#67A280']))
+                with col3: 
+                    st.write('')
+                    
+                col1, col2, col3 = st.columns([.5, 5, .5])
+                with col1: 
+                    st.write('')
+                with col2: 
+                    st.plotly_chart(create_sparklines(games), use_container_width=True)
+                with col3: 
+                    st.write('')
+            except: 
+                st.warning('no records found')
+            st.write('')
+            st.info('Data from boydsworld.com, valid 1992-2021.')

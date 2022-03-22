@@ -77,36 +77,39 @@ class TeamPitchingApp(HydraHeadApp):
             team_pitching_submit = col4.form_submit_button('submit')
 
         if team_pitching_submit:
-            # all_stats = metrics.add_pitching_metrics(raw_stats)
-            stats = ncaa.get_team_stats(school, season, 'pitching')
-            all_stats = metrics.add_pitching_metrics(stats)
-            rate_stats = all_stats[['name', 'Yr', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
-            counting_stats = all_stats[['name', 'Yr', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']]
-            col1, col2, col3= st.columns([3,2,10])
-            col1.markdown('### Rate Stats')
-            rate_stats_csv = convert_df(rate_stats)
-            col2.write('')
-            col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(school)+'_rate_stats_'+str(season)+'.csv', mime='text/csv')
-            col3.write('')
-            st.dataframe(rate_stats)
-            st.write('')
-            col1, col2, col3 = st.columns([3,2,10])
-            col1.markdown('### Counting Stats')
-            counting_stats_csv = convert_df(counting_stats)
-            col2.write('')
-            col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(school)+'_counting_stats_'+str(season)+'.csv', mime='text/csv')
-            col3.write('')
-            st.dataframe(counting_stats)
-            metrics1 = {'K/PA':'indianred', 'BB/PA':'dodgerblue', 
-               'BABIP-against':'crimson', 'BABIP-against':'darkorchid',
-               'OBP-against':'darkorange', 'SLG-against':'darkblue',
-               'BA-against':'forestgreen', 'HR-A/PA':'tan'}
-            st.plotly_chart(create_dotplot(all_stats, school, season, metrics1), use_container_width=True)
-            st.write('')
-            metrics2 = {'FIP':'darkorange', 'ERA':'dodgerblue', 'WHIP':'navy'}
-            st.plotly_chart(create_dotplot(all_stats, school, season, metrics2), use_container_width=True)
-            st.write('')
-            st.plotly_chart(create_scatter(all_stats, 'BF', 'FIP', school, season), use_container_width=True)
-            st.write('')
-            st.plotly_chart(create_histogram(all_stats, 'OBP-against', school, season, 'Yr'), use_container_width=True)
+            try: 
+                stats = ncaa.get_team_stats(school, season, 'pitching')
+                all_stats = metrics.add_pitching_metrics(stats)
+                rate_stats = all_stats[['name', 'Yr', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
+                counting_stats = all_stats[['name', 'Yr', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']]
+                col1, col2, col3= st.columns([3,2,10])
+                col1.markdown('### Rate Stats')
+                rate_stats_csv = convert_df(rate_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(school)+'_rate_stats_'+str(season)+'.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(rate_stats)
+                st.write('')
+                col1, col2, col3 = st.columns([3,2,10])
+                col1.markdown('### Counting Stats')
+                counting_stats_csv = convert_df(counting_stats)
+                col2.write('')
+                col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(school)+'_counting_stats_'+str(season)+'.csv', mime='text/csv')
+                col3.write('')
+                st.dataframe(counting_stats)
+                metrics1 = {'K/PA':'indianred', 'BB/PA':'dodgerblue', 
+                'BABIP-against':'crimson', 'BABIP-against':'darkorchid',
+                'OBP-against':'darkorange', 'SLG-against':'darkblue',
+                'BA-against':'forestgreen', 'HR-A/PA':'tan'}
+                st.plotly_chart(create_dotplot(all_stats, school, season, metrics1), use_container_width=True)
+                st.write('')
+                metrics2 = {'FIP':'darkorange', 'ERA':'dodgerblue', 'WHIP':'navy'}
+                st.plotly_chart(create_dotplot(all_stats, school, season, metrics2), use_container_width=True)
+                st.write('')
+                st.plotly_chart(create_scatter(all_stats, 'BF', 'FIP', school, season), use_container_width=True)
+                st.write('')
+                st.plotly_chart(create_histogram(all_stats, 'OBP-against', school, season, 'Yr'), use_container_width=True)
+            except: 
+                st.warning('no records found')
             st.write('')          
+            st.info('Data from stats.ncaa.org. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
