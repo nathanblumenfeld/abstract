@@ -41,9 +41,9 @@ if __name__ == '__main__':
                        'txc_inactive':'#FFFFFF', 
                        'txc_active':'#000000'}
     )
-    app.add_app('Team History', app=TeamHistoryApp(), is_home=True)
-    app.add_app("Team Batting", app=TeamBattingApp())
+    app.add_app("Team Batting", app=TeamBattingApp(), is_home=True)
     app.add_app("Team Pitching", app=TeamPitchingApp())
+    app.add_app('Team History', app=TeamHistoryApp())
     app.add_app("Player Batting", app=PlayerBattingApp())
     app.add_app("Player Pitching", app=PlayerPitchingApp())
 

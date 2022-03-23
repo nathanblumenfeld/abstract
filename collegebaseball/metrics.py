@@ -214,9 +214,11 @@ def add_batting_metrics(df):
                                   + 4 * df['HR']) /df['AB'], ROUND_TO)
         df.loc[:, 'OPS'] = round(df['OBP'] + df['SLG'], ROUND_TO)
         df.loc[:, 'ISO'] = round(df['SLG'] - df['BA'], ROUND_TO)
-        df.loc[:, 'HR/PA'] = round(df['HR'] / df['PA'], ROUND_TO)
+        df.loc[:, 'HR%'] = round(df['HR'] / df['PA'], ROUND_TO)
         df.loc[:, 'K%'] = round(df['K'] / df['PA'], ROUND_TO)
+        # df.loc[:, 'K%'] = round(df['K'] / df['PA'], ROUND_TO)*100
         df.loc[:, 'BB%'] = round(df['BB'] / df['PA'], ROUND_TO)
+        # df.loc[:, 'BB%'] = round(df['BB'] / df['PA'], ROUND_TO)*100
         df.loc[:, 'BABIP'] = round((df['H'] - df['HR']) \
                                    / (df['AB'] - df['K'] - df['HR'] \
                                       + df['SF']), ROUND_TO)
