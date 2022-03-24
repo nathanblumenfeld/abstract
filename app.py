@@ -2,6 +2,7 @@ from collegebaseball import metrics
 from collegebaseball import win_pct
 from collegebaseball import ncaa_scraper as ncaa
 from collegebaseball import boydsworld_scraper as bd
+import matplotlib.pyplot as plt
 
 import streamlit as st
 import pandas as pd
@@ -15,10 +16,12 @@ from hydralit import HydraHeadApp
 from hydralit import HydraApp
 
 from team_history import TeamHistoryApp
-from team_batting import TeamBattingApp
-from team_pitching import TeamPitchingApp
-from player_batting import PlayerBattingApp
-from player_pitching import PlayerPitchingApp
+from team import TeamApp
+from player import PlayerApp
+# from team_pitching import TeamPitchingApp
+# from player_batting import PlayerBattingApp
+# from player_pitching import PlayerPitchingApp
+from leaderboards import LeaderboardsApp 
 
 from loading import LoadingApp
 
@@ -41,11 +44,14 @@ if __name__ == '__main__':
                        'txc_inactive':'#FFFFFF', 
                        'txc_active':'#000000'}
     )
-    app.add_app("Team Batting", app=TeamBattingApp(), is_home=True)
-    app.add_app("Team Pitching", app=TeamPitchingApp())
+    app.add_app("Leaderboards", app=LeaderboardsApp(), is_home=True)
     app.add_app('Team History', app=TeamHistoryApp())
-    app.add_app("Player Batting", app=PlayerBattingApp())
-    app.add_app("Player Pitching", app=PlayerPitchingApp())
+    app.add_app("Team Stats", app=TeamApp())
+    # app.add_app("Team Pitching", app=TeamPitchingApp())
+    app.add_app("Player Stats", app=PlayerApp())
+
+    # app.add_app("Player Batting", app=PlayerBattingApp())
+    # app.add_app("Player Pitching", app=PlayerPitchingApp())
 
     app.add_loader_app(LoadingApp())
 
