@@ -44,8 +44,10 @@ def create_sparklines(df):
         res = pd.concat([res, new])
         
     fig = px.line(res, x="game_number", y="cumsum_rd", color='season',
-                  color_discrete_sequence=px.colors.qualitative.T10,
-                  line_group='season')
+                  color_discrete_sequence=['#2f4b7c', '#ffa600', '#003f5c', '#a05195', '#d45087', '#f95d6a',
+                                           '#ff7c43', '#2f4b7c', '#004c6d', '#255e7e', '#3d708f', '#5383a1', 
+                                           '#6996b3', '#7faac6', '#94bed9', '#abd2ec', '#c1e7ff'],
+                      line_group='season')
     fig.update_layout( 
         title = f"""Cumulative Run Differential by Season""",
         title_font_size = 20,

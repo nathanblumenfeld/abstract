@@ -79,76 +79,78 @@ class PlayerApp(HydraHeadApp):
             col4.markdown('#')
             submitted = col4.form_submit_button('submit')
         if submitted: 
-            if variant == 'batting':
-                all_stats = metrics.add_batting_metrics(stats).sort_values(by='season')
-                rate_stats = all_stats[['season', 'PA', 'wOBA', 'OPS', 'OBP', 'SLG', 'BA', 'ISO', 'K%', 'BB%', 'BABIP', 'HR%']]
-                counting_stats = all_stats[['season', 'PA', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'R', 'SF', 'SH']]
-                col1, col2, col3= st.columns([3,2,10])
-                col1.markdown('## Rate Stats')
-                rate_stats_csv = convert_df(rate_stats)
-                col2.markdown('#')
-                col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
-                hide_dataframe_row_index = """
-                        <style>
-                        .row_heading.level0 {display:none}
-                        .blank {display:none}
-                        </style>
-                """
-                st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-                rate_slice = ['PA', 'wOBA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%']
-                st.dataframe(rate_stats.style.format({"PA": '{:.0f}', "wOBA": '{:.3f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice))
-                st.markdown('#')
-                col1, col2, col3 = st.columns([3,2,10])
-                col1.markdown('## Counting Stats')
-                counting_stats_csv = convert_df(counting_stats)
-                col2.markdown('#')
-                col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
-                counting_slice = ['PA', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'R', 'SF', 'SH']
-                st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-                st.dataframe(counting_stats)
-                rate_metrics = {'BB%':'#003f5c', 'K%':'#2f4b7c', 'BA':'#665191', 'OBP':'#d45087', 'wOBA':'#f95d6a', 'BABIP':'#ff7c43', 'SLG':'#ffa600'}
-                st.plotly_chart(create_dotplot(all_stats, player_name, rate_metrics), use_container_width=True)
-                st.write('')           
-                st.plotly_chart(create_scatter(all_stats, 'OBP', 'wOBA', 'PA', player_name), use_container_width=True)
-                st.write('')
-                # st.warning('no records found')
-            else: 
-                all_stats = metrics.add_pitching_metrics(stats).sort_values(by='season')
-                rate_stats = all_stats[['season', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'BA-against', 'SLG-against','BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
-                counting_stats = all_stats[['season', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']]
-                col1, col2, col3= st.columns([3,2,10])
-                col1.markdown('## Rate Stats')
-                rate_stats_csv = convert_df(rate_stats)
-                col2.markdown('#')
-                col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
-                hide_dataframe_row_index = """
-                        <style>
-                        .row_heading.level0 {display:none}
-                        .blank {display:none}
-                        </style>
-                """
-                st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-                rate_slice = ['IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']
-                st.dataframe(rate_stats.style.format({"IP": '{:.1f}', "BF": '{:.0f}', "ERA": '{:.2f}', "FIP": '{:.3f}', "WHIP": '{:.3f}', "K/PA": '{:.3f}', "BB/PA": '{:.3f}', "OPS-against": '{:.3f}', "OBP-against": '{:.3f}', "SLG-against": '{:.3f}', "BA-against": '{:.3f}', "Pitches/PA": '{:.3f}', "HR-A/PA": '{:.3f}', "IP/App": '{:.3f}'}, na_rep="", subset=rate_slice))
-                st.write('')
-                col1, col2, col3 = st.columns([3,2,10])
-                col1.markdown('## Counting Stats')
-                counting_stats_csv = convert_df(counting_stats)
-                col2.markdown('#')
-                col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
-                st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-                counting_slice = ['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']
-                st.dataframe(counting_stats.style.format({"IP": '{:.1f}'}))
-                metrics1 = {'K/PA':'#2f4b7c', 'HR-A/PA':'#ffa600', 
-                'BABIP-against':'#003f5c', 'BABIP-against':'#a05195',
-                'OBP-against':'#d45087', 'SLG-against':'#f95d6a',
-                'BA-against':'#ff7c43', 'BB/PA':'#2f4b7c'}
-                st.plotly_chart(create_dotplot(all_stats, player_name, metrics1), use_container_width=True)
-                st.write('')
-                metrics2 = {'FIP':'#2f4b7c', 'ERA':'#d45087', 'WHIP':'#ffa600'}
-                st.plotly_chart(create_dotplot(all_stats, player_name, metrics2), use_container_width=True)
-                st.write('')
-                st.plotly_chart(create_scatter(all_stats, 'ERA', 'FIP', 'BF', player_name), use_container_width=True)    
-
+                try: 
+                    if variant == 'batting':
+                        all_stats = metrics.add_batting_metrics(stats).sort_values(by='season')
+                        rate_stats = all_stats[['season', 'PA', 'wOBA', 'OPS', 'OBP', 'SLG', 'BA', 'ISO', 'K%', 'BB%', 'BABIP', 'HR%']]
+                        counting_stats = all_stats[['season', 'PA', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'R', 'SF', 'SH']]
+                        col1, col2, col3= st.columns([3,2,10])
+                        col1.markdown('## Rate Stats')
+                        rate_stats_csv = convert_df(rate_stats)
+                        col2.markdown('#')
+                        col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
+                        hide_dataframe_row_index = """
+                                <style>
+                                .row_heading.level0 {display:none}
+                                .blank {display:none}
+                                </style>
+                        """
+                        st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+                        rate_slice = ['PA', 'wOBA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%']
+                        st.dataframe(rate_stats.style.format({"PA": '{:.0f}', "wOBA": '{:.3f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice))
+                        st.markdown('#')
+                        col1, col2, col3 = st.columns([3,2,10])
+                        col1.markdown('## Counting Stats')
+                        counting_stats_csv = convert_df(counting_stats)
+                        col2.markdown('#')
+                        col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
+                        counting_slice = ['PA', 'H', '1B', '2B', '3B', 'HR', 'BB', 'IBB', 'K', 'HBP', 'RBI', 'R', 'SF', 'SH']
+                        st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+                        st.dataframe(counting_stats)
+                        rate_metrics = {'BB%':'#003f5c', 'K%':'#2f4b7c', 'BA':'#665191', 'OBP':'#d45087', 'wOBA':'#f95d6a', 'BABIP':'#ff7c43', 'SLG':'#ffa600'}
+                        st.plotly_chart(create_dotplot(all_stats, player_name, rate_metrics), use_container_width=True)
+                        st.write('')           
+                        st.plotly_chart(create_scatter(all_stats, 'OBP', 'wOBA', 'PA', player_name), use_container_width=True)
+                        st.write('')
+                        # st.warning('no records found')
+                    else: 
+                        all_stats = metrics.add_pitching_metrics(stats).sort_values(by='season')
+                        rate_stats = all_stats[['season', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'BA-against', 'SLG-against','BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
+                        counting_stats = all_stats[['season', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']]
+                        col1, col2, col3= st.columns([3,2,10])
+                        col1.markdown('## Rate Stats')
+                        rate_stats_csv = convert_df(rate_stats)
+                        col2.markdown('#')
+                        col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(player_name)+'_career_rate_stats_.csv', mime='text/csv')
+                        hide_dataframe_row_index = """
+                                <style>
+                                .row_heading.level0 {display:none}
+                                .blank {display:none}
+                                </style>
+                        """
+                        st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+                        rate_slice = ['IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']
+                        st.dataframe(rate_stats.style.format({"IP": '{:.1f}', "BF": '{:.0f}', "ERA": '{:.2f}', "FIP": '{:.3f}', "WHIP": '{:.3f}', "K/PA": '{:.3f}', "BB/PA": '{:.3f}', "OPS-against": '{:.3f}', "OBP-against": '{:.3f}', "BABIP-against": '{:.3f}', "SLG-against": '{:.3f}', "BA-against": '{:.3f}', "Pitches/PA": '{:.3f}', "HR-A/PA": '{:.3f}', "IP/App": '{:.3f}'}, na_rep="", subset=rate_slice))
+                        st.write('')
+                        col1, col2, col3 = st.columns([3,2,10])
+                        col1.markdown('## Counting Stats')
+                        counting_stats_csv = convert_df(counting_stats)
+                        col2.markdown('#')
+                        col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(player_name)+'_career_counting_stats_.csv', mime='text/csv')
+                        st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+                        counting_slice = ['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', '2B-A', '3B-A', 'GO', 'FO', 'W', 'L', 'SV']
+                        st.dataframe(counting_stats.style.format({"IP": '{:.1f}'}))
+                        metrics1 = {'K/PA':'#2f4b7c', 'HR-A/PA':'#ffa600', 
+                        'BABIP-against':'#003f5c', 'BABIP-against':'#a05195',
+                        'OBP-against':'#d45087', 'SLG-against':'#f95d6a',
+                        'BA-against':'#ff7c43', 'BB/PA':'#2f4b7c'}
+                        st.plotly_chart(create_dotplot(all_stats, player_name, metrics1), use_container_width=True)
+                        st.write('')
+                        metrics2 = {'FIP':'#2f4b7c', 'ERA':'#d45087', 'WHIP':'#ffa600'}
+                        st.plotly_chart(create_dotplot(all_stats, player_name, metrics2), use_container_width=True)
+                        st.write('')
+                        st.plotly_chart(create_scatter(all_stats, 'ERA', 'FIP', 'BF', player_name), use_container_width=True)    
+                except:
+                    st.warning('no records found')
         st.write('')          
         st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
