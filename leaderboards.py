@@ -91,7 +91,6 @@ def create_dist(df, metric, season):
 
 class LeaderboardsApp(HydraHeadApp):
     def run(self): 
-        # with st.form(key="leaderboards_input"):
         col1, col2, col3, col4, col5, col6 = st.columns(6)
         season = col1.selectbox('Season', options=range(2013, 2023), index=9, key='season_select')
         stats_type = col5.selectbox('Stats Type', options=['batting', 'pitching'], index=0, key='stats_type_select')
@@ -132,7 +131,7 @@ class LeaderboardsApp(HydraHeadApp):
             col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(season)+'_'+stats_type+'_rate_stat_leaders_batting'+'_'+str(positions)+'_'+str(schools)+'_minPA_'+str(minimum)+'.csv', mime='text/csv')
 
             st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-            st.dataframe(rate_stats.style.format({"PA": ':.0f}', "wOBA": '{:.3f}', "wRC": '{:.1f}', "wRAA": '{:.1f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice).highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=rate_slice))
+            st.dataframe(rate_stats.style.format({"PA": '{:.0f}', "wOBA": '{:.3f}', "wRC": '{:.1f}', "wRAA": '{:.1f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice).highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=rate_slice))
 
             metric = st.selectbox('select metric', options=['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%'], index=4, key='metric_select')
 
