@@ -70,8 +70,8 @@ def load_school_lookup():
     return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
 
 def load_school_options(): 
-    df = load_school_lookup()
-    options = df.school.unique()
+    df = pd.read_parquet('collegebaseball/data/schools.parquet')
+    options = df.ncaa_name.unique()
     return options
 
 class TeamHistoryApp(HydraHeadApp):

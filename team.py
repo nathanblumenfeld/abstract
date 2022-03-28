@@ -20,6 +20,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
+@st.cache
 def load_season_stats(season, variant): 
     """
     """
@@ -29,12 +30,14 @@ def load_season_stats(season, variant):
 def load_team_stats(df, school): 
     return df.loc[df.school == school]
     
+@st.cache
 def load_school_lookup(): 
     return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
 
+@st.cache
 def load_school_options(): 
-    df = load_school_lookup()
-    options = df.school.unique()
+    df = pd.read_parquet('collegebaseball/data/schools.parquet')
+    options = df.ncaa_name.unique()
     return options
 
 def create_histogram(data, metric, school, season):
@@ -58,7 +61,7 @@ def create_dotplot(df, school, season, metrics):
                 mode="markers",
                 name=i
         ))      
-    fig.update_layout(title=str(school)+" batters, "+str(season), xaxis=dict(showgrid=False, showline=True, zerolinecolor='DarkSlateGrey'), yaxis=dict(showgrid=True, gridwidth=0.5, gridcolor='DarkSlateGrey'), height=len(df.name.unique())*35)
+    fig.update_layout(title=str(school)+', '+str(season), xaxis=dict(showgrid=False, showline=True, zerolinecolor='DarkSlateGrey'), yaxis=dict(showgrid=True, gridwidth=0.5, gridcolor='DarkSlateGrey'), height=len(df.name.unique())*35)
     fig.update_xaxes(range=[0,1])
     return fig
 
@@ -137,7 +140,7 @@ class TeamApp(HydraHeadApp):
                 #.style.highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=counting_slice))
 
                 st.write('')
-                rate_metrics = {'BB%':'#003f5c', 'K%':'#2f4b7c', 'BA':'#665191', 'OBP':'#d45087', 'wOBA':'#f95d6a', 'BABIP':'#ff7c43', 'SLG':'#ffa600'}
+                rate_metrics = {'BB%':'#003f5c', 'K%':'#7aa6c2', 'BA':'#665191', 'OBP':'#d45087', 'wOBA':'#f95d6a', 'BABIP':'#ff7c43', 'SLG':'#ffa600'}
                 st.plotly_chart(create_dotplot(all_stats, school, season, rate_metrics), use_container_width=True)
                 st.write('')
                 # st.plotly_chart(create_histogram(all_stats, 'wOBA', school, season), use_container_width=True)
@@ -204,4 +207,4 @@ class TeamApp(HydraHeadApp):
         except: 
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 3/28. Percentiles relative to all D1 players with 20+ PA. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')

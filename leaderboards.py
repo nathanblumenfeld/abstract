@@ -20,6 +20,7 @@ def convert_df(df):
 def load_player_lookup(): 
     return pd.read_parquet('collegebaseball/data/players_history.parquet')
 
+@st.cache
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
@@ -55,33 +56,31 @@ def _calculate_percentiles(df, variant):
         stats = ['OBP', 'BA', 'SLG', 'OPS', 'ISO', 'HR%', 'K%', 'BB%', 'BABIP', 'wOBA', 'wRAA', 'wRC']
     else: 
         stats = ['ERA', 'IP', 'BF', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'FIP', 'WHIP', 'HR-A/PA']
-
     for stat in stats: 
         df[stat+'-percentile'] = pd.qcut(df[stat], q=100, labels=False, duplicates='drop')
     return df
 
+@st.cache
 def load_player_options(): 
     df = load_player_lookup()
     df.set_index("stats_player_seq", drop=True, inplace=True)
     dictionary = df.to_dict(orient="index")
     return dictionary
 
-def load_school_lookup(): 
-    return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
-
+@st.cache
 def load_school_options(): 
-    df = load_school_lookup()
-    options = list(df.school.unique())
+    df = pd.read_parquet('collegebaseball/data/schools.parquet')
+    options = list(df.ncaa_name.unique())
     options.insert(0, 'all')
     return options
 
 def create_dist(df, metric, season):
-    fig = px.histogram(df, x=metric, hover_name='name', hover_data=["school"], template="seaborn")
+    fig = px.histogram(df, x=metric, marginal='box', hover_name='name', hover_data=["school"], template="seaborn")
     fig.update_layout(title = str(season)+' '+metric+' distribution', 
                       title_yanchor = "top",
                       title_x =  0.5,
                       xaxis_title=metric,
-                      yaxis_title='')                   
+                      yaxis_title='# of players')                   
     return fig
 # show dist
 
@@ -109,9 +108,9 @@ class LeaderboardsApp(HydraHeadApp):
                     </style>
             """
             if stats_type == 'batting':
-                counting_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'H', '2B', '3B', 'HR', 'K', 'BB', 'R', 'RBI', 'IBB', 'SF', 'SH', 'HBP']]
+                counting_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'H', '2B', '3B', 'HR', 'K', 'BB', 'R', 'RBI', 'IBB', 'SF', 'SH', 'HBP']].sort_values(by='H', ascending=False)
                 counting_slice = ['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH']
-                rate_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'ISO', 'BABIP', 'K%', 'BB%', 'HR%']]
+                rate_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'ISO', 'BABIP', 'K%', 'BB%', 'HR%']].sort_values(by='wOBA', ascending=False)
                 rate_slice = ['PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%']
 
                 col1, col2, col3= st.columns([3,2,10])
@@ -131,11 +130,11 @@ class LeaderboardsApp(HydraHeadApp):
                 st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
                 st.dataframe(rate_stats.style.format({"PA": '{:.0f}', "wOBA": '{:.3f}', "wRC": '{:.1f}', "wRAA": '{:.1f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice).highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=rate_slice))
 
-                metric = st.selectbox('select metric', options=['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%'], index=4, key='metric_select')
+                metric = st.selectbox('select metric', options=['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%'], index=13, key='metric_select')
 
                 st.plotly_chart(create_dist(stats, metric, season), use_container_width=True)
             else: 
-                rate_stats = stats[['name', 'Yr', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
+                rate_stats = stats[['name', 'Yr', 'school', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
                 rate_slice = ['IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']
                 counting_stats = stats[['name', 'Yr', 'school', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV']]
                 counting_slice = ['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV']
@@ -157,16 +156,11 @@ class LeaderboardsApp(HydraHeadApp):
 
                 st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
                 st.dataframe(rate_stats.style.format({"IP": '{:.1f}', "BF": '{:.0f}', "ERA": '{:.2f}', "FIP": '{:.3f}', "WHIP": '{:.3f}', "K/PA": '{:.3f}', "BB/PA": '{:.3f}', "OPS-against": '{:.3f}', "OBP-against": '{:.3f}', "BABIP-against": '{:.3f}', "SLG-against": '{:.3f}', "BA-against": '{:.3f}', "Pitches/PA": '{:.3f}', "HR-A/PA": '{:.3f}', "IP/App": '{:.3f}'}, na_rep="", subset=rate_slice))
-    #         else: 
 
-    #             counting_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'H', '2B', '3B', 'HR', 'K', 'BB', ]]
-    #             rate_stats = stats[['']]
-    #             st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-    #             st.dataframe(counting_stats)
-                metric = st.selectbox('select metric', options=['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App'], index=4, key='metric_select')
+                metric = st.selectbox('select metric', options=['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App'], index=17, key='metric_select')
 
                 st.plotly_chart(create_dist(stats, metric, season), use_container_width=True)
         except:
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org, valid 2013-2022. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 3/28. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
