@@ -56,13 +56,12 @@ def create_dotplot(df, school, season, metrics):
                 name=i
         ))      
     fig.update_layout(title=str(school)+', '+str(season), xaxis=dict(showgrid=False, showline=True, zerolinecolor='DarkSlateGrey'), yaxis=dict(showgrid=True, gridwidth=0.5, gridcolor='DarkSlateGrey'), height=len(df.name.unique())*35)
-    fig.update_xaxes(range=[0,1])
     return fig
 
 def create_scatter(data, metric1, metric2, metric3, metric4, school, season):
     fig = px.scatter(data, x=metric1, y=metric2, hover_name="name", size=metric3, color=metric4, color_discrete_sequence=['#003f5c', '#7a5195', '#ef5675', '#ffa600'])
     fig.update_layout(
-        title = str(school)+' '+str(season)+', '+str(metric2)+' vs '+str(metric1),
+        title = str(school)+' '+str(season)+', '+str(metric2)+' vs '+str(metric1)+'<br><sub>size='+str(metric3)+'</sub>',
         title_yanchor = "top",
         title_x = 0.5,
         xaxis_title=str(metric1),
