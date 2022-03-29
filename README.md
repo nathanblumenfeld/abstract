@@ -1,6 +1,6 @@
-# abstract   
-## (a budding sabermetric tool for research of college teams)     
-A public Streamlit web app built on top of the [collegebaseball](https://github.com/nathanblumenfeld/collegebaseball) package.
+# [![abstract_0 5x](https://user-images.githubusercontent.com/33358095/160667201-a78021e3-8fa1-4149-b634-e543017f772f.png)](https://share.streamlit.io/nathanblumenfeld/abstract/main/app.py)    
+### (a budding sabermetric tool for research of college teams)     
+#### A public Streamlit web app built on top of the [collegebaseball](https://github.com/nathanblumenfeld/collegebaseball) package.
 
 <!-- badges: start -->
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/nathanblumenfeld/abstract/main/app.py)
