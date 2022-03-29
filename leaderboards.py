@@ -12,7 +12,7 @@ def convert_df(df):
 def load_player_lookup(): 
     return pd.read_parquet('collegebaseball/data/players_history.parquet')
 
-@st.cache(allow_output_mutation=True, ttl=60*10, persist=True)
+@st.cache(allow_output_mutation=True, ttl=60*10, persist=False)
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
