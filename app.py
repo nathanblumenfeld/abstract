@@ -38,10 +38,11 @@ if __name__ == '__main__':
                        'txc_inactive':'#FFFFFF', 
                        'txc_active':'#000000'}
     )
-    app.add_app("Leaderboards", app=LeaderboardsApp(), is_home=True)
-    app.add_app('Team History', app=TeamHistoryApp())
-    app.add_app("Team Stats", app=TeamApp())
+    app.add_app("Team Stats", app=TeamApp(), is_home=True)
     app.add_app("Player Stats", app=PlayerApp())
+    app.add_app("Leaderboards", app=LeaderboardsApp())
+    app.add_app('Team History', app=TeamHistoryApp())
+
     app.add_loader_app(LoadingApp())
 
     app.run()
