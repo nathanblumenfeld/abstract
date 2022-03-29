@@ -9,10 +9,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
-def load_player_lookup(): 
-    return pd.read_parquet('collegebaseball/data/players_history.parquet')
-
-@st.cache(allow_output_mutation=True, ttl=60*10, persist=False)
+@st.cache(allow_output_mutation=True, ttl=60*10, persist=True)
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
@@ -41,12 +38,6 @@ def load_season_stats(season, variant, position, school, minimum, class_year):
         res = res[['name', 'Yr', 'school', 'position', 'BF', 'IP', 'FIP', 'ERA', 'WHIP', 'SO', 'BB', 'H', 'HR-A', 'ER', 'R', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'HR-A/PA', 'BABIP-against', 'Pitches/PA','IP/App', 'App', 'HB', 'GO', 'FO', 'W', 'L', 'SV']]
     return res
 
-def load_player_options(): 
-    df = load_player_lookup()
-    df.set_index("stats_player_seq", drop=True, inplace=True)
-    dictionary = df.to_dict(orient="index")
-    return dictionary
-
 def load_school_options(): 
     df = pd.read_parquet('collegebaseball/data/schools.parquet')
     options = list(df.ncaa_name.unique())
@@ -61,7 +52,6 @@ def create_dist(df, metric, season):
                       xaxis_title=metric,
                       yaxis_title='# of players')                   
     return fig
-# show dist
 
 class LeaderboardsApp(HydraHeadApp):
     def run(self): 
@@ -119,7 +109,6 @@ class LeaderboardsApp(HydraHeadApp):
                 st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
                 st.dataframe(counting_stats.style.highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=counting_slice).format({"IP": '{:.1f}'}))
 
-
                 col1, col2, col3= st.columns([3,2,10])
                 col1.markdown('## Rate Stats')
                 rate_stats_csv = convert_df(rate_stats)
@@ -130,7 +119,6 @@ class LeaderboardsApp(HydraHeadApp):
                 st.dataframe(rate_stats.style.format({"IP": '{:.1f}', "BF": '{:.0f}', "ERA": '{:.2f}', "FIP": '{:.3f}', "WHIP": '{:.3f}', "K/PA": '{:.3f}', "BB/PA": '{:.3f}', "OPS-against": '{:.3f}', "OBP-against": '{:.3f}', "BABIP-against": '{:.3f}', "SLG-against": '{:.3f}', "BA-against": '{:.3f}', "Pitches/PA": '{:.3f}', "HR-A/PA": '{:.3f}', "IP/App": '{:.3f}'}, na_rep="", subset=rate_slice))
 
                 metric = st.selectbox('select metric', options=['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App'], index=17, key='metric_select')
-
                 st.plotly_chart(create_dist(stats, metric, season), use_container_width=True)
         except:
             st.warning('no records found')
