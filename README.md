@@ -1,6 +1,5 @@
-# abstract
-(a budding sabermetric tool for research of college teams)
-created using [collegebaseball](https://github.com/nathanblumenfeld/collegebaseball)
+# abstract (a budding sabermetric tool for research of college teams)   
+A public Streamlit web app built on top of the [collegebaseball](https://github.com/nathanblumenfeld/collegebaseball) package.
 
 <!-- badges: start -->
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/nathanblumenfeld/abstract/main/app.py)
