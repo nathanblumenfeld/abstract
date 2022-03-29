@@ -19,7 +19,7 @@ from player import PlayerApp
 from leaderboards import LeaderboardsApp 
 from loading import LoadingApp
 
-favicon = Image.open('assets/favicon.png')
+favicon = Image.open('assets/favicon_white.jpeg')
 title_img = Image.open('assets/abstract_2x.png')
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_icon=favicon, page_title="Abstract")
