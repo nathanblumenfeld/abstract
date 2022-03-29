@@ -12,7 +12,7 @@ def convert_df(df):
 def load_player_lookup(): 
     return pd.read_parquet('collegebaseball/data/players_history.parquet')
 
-@st.cache(allow_output_mutation=True, persist=True)
+@st.cache(allow_output_mutation=True, ttl=60*10, persist=True)
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
@@ -40,17 +40,6 @@ def load_season_stats(season, variant, position, school, minimum, class_year):
     else: 
         res = res[['name', 'Yr', 'school', 'position', 'BF', 'IP', 'FIP', 'ERA', 'WHIP', 'SO', 'BB', 'H', 'HR-A', 'ER', 'R', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'HR-A/PA', 'BABIP-against', 'Pitches/PA','IP/App', 'App', 'HB', 'GO', 'FO', 'W', 'L', 'SV']]
     return res
-
-# def _calculate_percentiles(df, variant): 
-#     """
-#     """
-#     if variant == 'batting': 
-#         stats = ['OBP', 'BA', 'SLG', 'OPS', 'ISO', 'HR%', 'K%', 'BB%', 'BABIP', 'wOBA', 'wRAA', 'wRC']
-#     else: 
-#         stats = ['ERA', 'IP', 'BF', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'FIP', 'WHIP', 'HR-A/PA']
-#     for stat in stats: 
-#         df[stat+'-percentile'] = pd.qcut(df[stat], q=100, labels=False, duplicates='drop')
-#     return df
 
 def load_player_options(): 
     df = load_player_lookup()
@@ -101,7 +90,6 @@ class LeaderboardsApp(HydraHeadApp):
                 counting_slice = ['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH']
                 rate_stats = stats[['name', 'Yr', 'school', 'position', 'PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'ISO', 'BABIP', 'K%', 'BB%', 'HR%']].sort_values(by='wOBA', ascending=False)
                 rate_slice = ['PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%']
-
                 col1, col2, col3= st.columns([3,2,10])
                 col1.markdown('## Counting Stats')
                 counting_stats_csv = convert_df(counting_stats)
@@ -109,25 +97,20 @@ class LeaderboardsApp(HydraHeadApp):
                 col2.download_button(label="download as csv", data=counting_stats_csv, file_name=str(season)+'_'+stats_type+'_counting_stat_leaders_batting'+'_'+str(position)+'_'+str(school)+'_minPA_'+str(minimum)+'.csv', mime='text/csv')
                 st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
                 st.dataframe(counting_stats.style.highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=counting_slice))
-
                 col1, col2, col3= st.columns([3,2,10])
                 col1.markdown('## Rate Stats')
                 rate_stats_csv = convert_df(rate_stats)
                 col2.markdown('#')
                 col2.download_button(label="download as csv", data=rate_stats_csv, file_name=str(season)+'_'+stats_type+'_rate_stat_leaders_batting'+'_'+str(position)+'_'+str(school)+'_minPA_'+str(minimum)+'.csv', mime='text/csv')
-
                 st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
                 st.dataframe(rate_stats.style.format({"PA": '{:.0f}', "wOBA": '{:.3f}', "wRC": '{:.1f}', "wRAA": '{:.1f}', "OPS": '{:.3f}', "OBP": '{:.3f}', "SLG": '{:.3f}', "BA": '{:.3f}', "BABIP": '{:.3f}', "ISO": '{:.3f}', "K%": '{:,.2%}', "BB%": '{:,.2%}', "HR%": '{:,.2%}'}, na_rep="", subset=rate_slice).highlight_max(axis=0, props='color:white; font-weight:bold; background-color:#147DF5;', subset=rate_slice))
-
                 metric = st.selectbox('select metric', options=['PA', 'H', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%'], index=13, key='metric_select')
-
                 st.plotly_chart(create_dist(stats, metric, season), use_container_width=True)
             else: 
                 rate_stats = stats[['name', 'Yr', 'school', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
                 rate_slice = ['IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']
                 counting_stats = stats[['name', 'Yr', 'school', 'IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV']]
                 counting_slice = ['IP', 'BF', 'App', 'H', 'SO', 'BB', 'ER', 'R', 'HR-A', 'HB', 'GO', 'FO', 'W', 'L', 'SV']
-
                 col1, col2, col3= st.columns([3,2,10])
                 col1.markdown('## Counting Stats')
                 counting_stats_csv = convert_df(counting_stats)
