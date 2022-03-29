@@ -1,14 +1,8 @@
-from collegebaseball import metrics
-from collegebaseball import win_pct
-from collegebaseball import ncaa_scraper as ncaa
-from collegebaseball import boydsworld_scraper as bd
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from PIL import Image
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -88,13 +82,9 @@ class TeamApp(HydraHeadApp):
             stats = load_season_stats(season, variant)
             school = col1.selectbox('School', options=school_options, index=55, key='team_school')
 
-            # team_batting_submit = col4.form_submit_button('submit')
-            # if team_batting_submit:
             stats = load_team_stats(stats, school)
             if variant == 'batting': 
-                # all_stats = metrics.add_batting_metrics(raw_stats)
                 all_stats = stats
-                # st.dataframe(all_stats)
                 rate_stats = all_stats[['name', 'Yr', 'pos', 'GP', 'PA', 'wOBA', 'wRC', 'wRAA', 'OPS', 'OBP', 'SLG', 'BA', 'BABIP', 'ISO', 'K%', 'BB%', 'HR%']]
                 counting_stats = all_stats[['name', 'Yr', 'pos', 'GP', 'PA', 'AB', 'H', '1B', '2B', '3B', 'HR', 'BB', 'K', 'IBB', 'HBP', 'RBI', 'R', 'SF', 'SH']]
                 col1, col2, col3= st.columns([3,2,10])
@@ -143,7 +133,6 @@ class TeamApp(HydraHeadApp):
                 rate_metrics = {'BB%':'#003f5c', 'K%':'#7aa6c2', 'BA':'#665191', 'OBP':'#d45087', 'wOBA':'#f95d6a', 'BABIP':'#ff7c43', 'SLG':'#ffa600'}
                 st.plotly_chart(create_dotplot(all_stats, school, season, rate_metrics), use_container_width=True)
                 st.write('')
-                # st.plotly_chart(create_histogram(all_stats, 'wOBA', school, season), use_container_width=True)
             else: 
                 all_stats = stats
                 rate_stats = all_stats[['name', 'Yr', 'IP', 'BF', 'ERA', 'FIP', 'WHIP', 'K/PA', 'BB/PA', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'BABIP-against', 'Pitches/PA', 'HR-A/PA', 'IP/App']]
@@ -202,8 +191,7 @@ class TeamApp(HydraHeadApp):
                 st.write('')
                 st.plotly_chart(create_scatter(all_stats, 'ERA', 'FIP', 'BF', 'Yr', school, season), use_container_width=True)
                 st.write('')
-                # st.plotly_chart(create_histogram(all_stats, 'OPS-against', school, season, 'Yr'), use_container_width=True)
-            # st.warning('no records found')
+
         except: 
             st.warning('no records found')
         st.write('')          

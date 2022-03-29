@@ -1,17 +1,11 @@
 from collegebaseball import metrics
-from collegebaseball import win_pct
 from collegebaseball import ncaa_scraper as ncaa
-from collegebaseball import boydsworld_scraper as bd
 
 import streamlit as st
-import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from PIL import Image
-
 from hydralit import HydraHeadApp
 
 

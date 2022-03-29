@@ -5,17 +5,12 @@ Displays data from BoydsWorld.com using boydsworld_scraper
 Nathan Blumenfeld
 2022
 """
-from collegebaseball import metrics
 from collegebaseball import win_pct
-from collegebaseball import ncaa_scraper as ncaa
-from collegebaseball import boydsworld_scraper as bd
-import streamlit as st
 
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
-from PIL import Image
 
 from hydralit import HydraHeadApp
 
@@ -46,7 +41,7 @@ def create_sparklines(df):
     fig = px.line(res, x="game_number", y="cumsum_rd", color='season',
                   color_discrete_sequence=['#2f4b7c', '#ffa600', '#003f5c', '#a05195', '#d45087', '#f95d6a',
                                            '#ff7c43', '#2f4b7c', '#004c6d', '#255e7e', '#3d708f', '#5383a1', 
-                                           '#6996b3', '#7faac6', '#94bed9', '#abd2ec', '#c1e7ff'],
+                                           '#6996b3', '#7faac6', '#94bed9', '#abws2ec', '#c1e7ff'],
                       line_group='season')
     fig.update_layout( 
         title = f"""Cumulative Run Differential by Season""",
