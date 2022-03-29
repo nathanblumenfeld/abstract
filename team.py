@@ -207,4 +207,4 @@ class TeamApp(HydraHeadApp):
         except: 
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org. Last Updated: 3/28. Percentiles relative to all D1 players with 20+ PA. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 3/29. Percentiles relative to all D1 players with 20+ PA. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')

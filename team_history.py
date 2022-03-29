@@ -21,7 +21,7 @@ from hydralit import HydraHeadApp
 
 @st.cache(persist=True)
 def load_games(): 
-    return pd.read_parquet('collegebaseball/data/games_1992_2021.parquet')
+    return pd.read_parquet('collegebaseball/data/games_all_1992_2021.parquet')
     
 def filter_games(school, seasons):
     df = load_games()
@@ -71,7 +71,9 @@ def load_school_lookup():
 
 def load_school_options(): 
     df = pd.read_parquet('collegebaseball/data/schools.parquet')
-    options = df.ncaa_name.unique()
+    df = df.loc[df.bd_name.notnull()]
+    options = df.bd_name.unique()
+    
     return options
 
 class TeamHistoryApp(HydraHeadApp):
@@ -83,10 +85,10 @@ class TeamHistoryApp(HydraHeadApp):
         with st.form(key="history_input"):
             col2, col3, col4, col5 = st.columns([.5, 2,.5, .5])
             school_row = school_lookup.loc[school_lookup.school == school]
-            valid_seasons = school_row.valid_seasons.values[0].copy()
+            valid_seasons = list(school_row.seasons.values[0]).copy()
             valid_seasons.sort()
-            min_season = school_row['min_season'].values[0]
-            max_season = school_row['max_season'].values[0]
+            min_season = school_row['first'].values[0]
+            max_season = school_row['last'].values[0]
             col2.markdown('#')
             start, end = col3.select_slider('Seasons', options=valid_seasons, value=(min_season, max_season), key='seasons_slider')
             season_input = [x for x in valid_seasons if ((x >= start) and (x <= end))]

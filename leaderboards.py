@@ -20,7 +20,7 @@ def convert_df(df):
 def load_player_lookup(): 
     return pd.read_parquet('collegebaseball/data/players_history.parquet')
 
-@st.cache
+@st.cache(allow_output_mutation=True, persist=True)
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
@@ -49,25 +49,23 @@ def load_season_stats(season, variant, position, school, minimum, class_year):
         res = res[['name', 'Yr', 'school', 'position', 'BF', 'IP', 'FIP', 'ERA', 'WHIP', 'SO', 'BB', 'H', 'HR-A', 'ER', 'R', 'OPS-against', 'OBP-against', 'SLG-against', 'BA-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'HR-A/PA', 'BABIP-against', 'Pitches/PA','IP/App', 'App', 'HB', 'GO', 'FO', 'W', 'L', 'SV']]
     return res
 
-def _calculate_percentiles(df, variant): 
-    """
-    """
-    if variant == 'batting': 
-        stats = ['OBP', 'BA', 'SLG', 'OPS', 'ISO', 'HR%', 'K%', 'BB%', 'BABIP', 'wOBA', 'wRAA', 'wRC']
-    else: 
-        stats = ['ERA', 'IP', 'BF', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'FIP', 'WHIP', 'HR-A/PA']
-    for stat in stats: 
-        df[stat+'-percentile'] = pd.qcut(df[stat], q=100, labels=False, duplicates='drop')
-    return df
+# def _calculate_percentiles(df, variant): 
+#     """
+#     """
+#     if variant == 'batting': 
+#         stats = ['OBP', 'BA', 'SLG', 'OPS', 'ISO', 'HR%', 'K%', 'BB%', 'BABIP', 'wOBA', 'wRAA', 'wRC']
+#     else: 
+#         stats = ['ERA', 'IP', 'BF', 'OBP-against', 'BA-against', 'SLG-against', 'OPS-against', 'K/PA', 'K/9', 'BB/PA', 'BB/9', 'FIP', 'WHIP', 'HR-A/PA']
+#     for stat in stats: 
+#         df[stat+'-percentile'] = pd.qcut(df[stat], q=100, labels=False, duplicates='drop')
+#     return df
 
-@st.cache
 def load_player_options(): 
     df = load_player_lookup()
     df.set_index("stats_player_seq", drop=True, inplace=True)
     dictionary = df.to_dict(orient="index")
     return dictionary
 
-@st.cache
 def load_school_options(): 
     df = pd.read_parquet('collegebaseball/data/schools.parquet')
     options = list(df.ncaa_name.unique())
@@ -89,8 +87,7 @@ class LeaderboardsApp(HydraHeadApp):
         col1, col2, col3, col4, col5, col6 = st.columns(6)
         season = col1.selectbox('Season', options=range(2013, 2023), index=9, key='season_select')
         stats_type = col5.selectbox('Stats Type', options=['batting', 'pitching'], index=0, key='stats_type_select')
-        class_year = col4.selectbox('Class Year', options=[
-                                     'all', 'Fr', 'So', 'Jr', 'Sr', 'other'], index=0, key='stats_type_select')
+        class_year = col4.selectbox('Class Year', options=['all', 'Fr', 'So', 'Jr', 'Sr', 'other'], index=0, key='stats_type_select')
         if stats_type == 'batting':
             position = col3.selectbox('Position', options=['all', 'INF', 'OF', 'C', 'P', 'DH'], index=0, key='position_select') 
             minimum = col6.number_input('Min. PA', min_value=0, value=20, step=1)
@@ -163,4 +160,4 @@ class LeaderboardsApp(HydraHeadApp):
         except:
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org. Last Updated: 3/28. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 3/29. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
