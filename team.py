@@ -55,7 +55,7 @@ def create_dotplot(df, school, season, metrics):
                 mode="markers",
                 name=i
         ))      
-    fig.update_layout(title=str(school)+', '+str(season), xaxis=dict(showgrid=False, showline=True, zerolinecolor='DarkSlateGrey'), yaxis=dict(showgrid=True, gridwidth=0.5, gridcolor='DarkSlateGrey'), height=len(df.name.unique())*35)
+    fig.update_layout(title=str(school)+', '+str(season), xaxis=dict(showgrid=False, showline=True, zerolinecolor='DarkSlateGrey'), yaxis=dict(showgrid=True, gridwidth=0.5, gridcolor='DarkSlateGrey'), height=(len(df.name.unique())*45)+100)
     return fig
 
 def create_scatter(data, metric1, metric2, metric3, metric4, school, season):
