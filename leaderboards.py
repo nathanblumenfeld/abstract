@@ -16,7 +16,7 @@ def load_season_stats(season, variant, position, school, minimum, class_year):
     df = pd.read_parquet('collegebaseball/data/'+variant+'_stats_all_'+str(season)+'_position.parquet')
     res = df 
     if school != 'all': 
-        res =  df.loc[df.school == school]
+        res = res.loc[res.school == school]
 
     if position != 'all':
         res = res.loc[res.position == position]
@@ -123,4 +123,4 @@ class LeaderboardsApp(HydraHeadApp):
         except:
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org. Last Updated: 3/30. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 4/1. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
