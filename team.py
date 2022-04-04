@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 from hydralit import HydraHeadApp
 
 
-@st.cache
+@st.cache(persist=True)
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
-@st.cache
+@st.cache(ttl=60*10)
 def load_season_stats(season, variant): 
     """
     """
@@ -24,11 +24,11 @@ def load_season_stats(season, variant):
 def load_team_stats(df, school): 
     return df.loc[df.school == school]
     
-@st.cache
+@st.cache(ttl=60*5)
 def load_school_lookup(): 
     return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
 
-@st.cache
+@st.cache(ttl=60*5)
 def load_school_options(): 
     df = pd.read_parquet('collegebaseball/data/schools.parquet')
     options = df.ncaa_name.unique()
@@ -194,4 +194,4 @@ class TeamApp(HydraHeadApp):
         except: 
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org. Last Updated: 4/3. Percentiles relative to all D1 players with 20+ PA. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 4/4. Percentiles relative to all D1 players with 20+ PA. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
