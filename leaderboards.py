@@ -123,4 +123,4 @@ class LeaderboardsApp(HydraHeadApp):
         except:
             st.warning('no records found')
         st.write('')          
-        st.info('Data from stats.ncaa.org. Last Updated: 4/4. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
+        st.info('Data from stats.ncaa.org. Last Updated: 4/6. Linear Weights for seasons 2013-2021 courtesy of Robert Frey. Note: Linear Weights for 2022 season are average of past five seasons.')
