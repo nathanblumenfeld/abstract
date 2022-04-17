@@ -16,7 +16,7 @@ from hydralit import HydraHeadApp
 
 @st.cache()
 def load_games(): 
-    df = pd.read_parquet('collegebaseball/data/games_all_1992_2021.parquet')
+    df = pd.read_parquet('data/games_all_1992_2021.parquet')
     return df
 
 def filter_games(school, seasons):

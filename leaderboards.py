@@ -13,7 +13,7 @@ def convert_df(df):
 def load_season_stats(season, variant, position, school, minimum, class_year): 
     """
     """
-    df = pd.read_parquet('collegebaseball/data/'+variant+'_stats_all_'+str(season)+'_position.parquet')
+    df = pd.read_parquet('data/'+variant+'_stats_all_'+str(season)+'_position.parquet')
     res = df 
     if school != 'all': 
         res = res.loc[res.school == school]
@@ -39,7 +39,7 @@ def load_season_stats(season, variant, position, school, minimum, class_year):
     return res
 
 def load_school_options(): 
-    df = pd.read_parquet('collegebaseball/data/schools.parquet')
+    df = pd.read_parquet('data/schools.parquet')
     options = list(df.ncaa_name.unique())
     options.insert(0, 'all')
     return options
@@ -47,10 +47,10 @@ def load_school_options():
 def create_dist(df, metric, season):
     fig = px.histogram(df, x=metric, marginal='box', hover_name='name', hover_data=["school"], template="seaborn")
     fig.update_layout(title = str(season)+' '+metric+' distribution', 
-                      title_yanchor = "top",
-                      title_x =  0.5,
-                      xaxis_title=metric,
-                      yaxis_title='# of players')                   
+                    title_yanchor = "top",
+                    title_x =  0.5,
+                    xaxis_title=metric,
+                    yaxis_title='# of players')                   
     return fig
 
 class LeaderboardsApp(HydraHeadApp):

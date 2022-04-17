@@ -34,9 +34,9 @@ if __name__ == '__main__':
         use_banner_images=["assets/abstract_0.5x.png", None, {'header':"</br><p style='text-align:center;padding: 0px 0px;color:grey;font-size:100%;'>created by <a href='https://github.com/nathanblumenfeld'>Nathan Blumenfeld</a></p>"}],
         banner_spacing = [20, 40, 15],
         navbar_theme= {'menu_background':'#147DF5', 
-                       'option_active':'#FFFFFF', 
-                       'txc_inactive':'#FFFFFF', 
-                       'txc_active':'#000000'}
+                        'option_active':'#FFFFFF', 
+                        'txc_inactive':'#FFFFFF', 
+                        'txc_active':'#000000'}
     )
     app.add_app("Team Stats", app=TeamApp(), is_home=True)
     app.add_app("Player Stats", app=PlayerApp())

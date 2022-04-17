@@ -15,7 +15,7 @@ def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
 
 def load_player_lookup(): 
-    return pd.read_parquet('collegebaseball/data/players_history.parquet')
+    return pd.read_parquet('data/players_history.parquet')
 
 def load_player_options(): 
     df = load_player_lookup()

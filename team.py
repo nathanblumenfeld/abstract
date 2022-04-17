@@ -18,7 +18,7 @@ def convert_df(df):
 def load_season_stats(season, variant): 
     """
     """
-    df = pd.read_parquet('collegebaseball/data/'+variant+'_stats_all_'+str(season)+'_percentiles_position_min20.parquet')
+    df = pd.read_parquet('data/'+variant+'_stats_all_'+str(season)+'_percentiles_position_min20.parquet')
     return df 
 
 def load_team_stats(df, school): 
@@ -26,11 +26,11 @@ def load_team_stats(df, school):
     
 @st.cache(ttl=60*5)
 def load_school_lookup(): 
-    return pd.read_parquet('collegebaseball/data/team_seasons.parquet')
+    return pd.read_parquet('data/team_seasons.parquet')
 
 @st.cache(ttl=60*5)
 def load_school_options(): 
-    df = pd.read_parquet('collegebaseball/data/schools.parquet')
+    df = pd.read_parquet('data/schools.parquet')
     options = df.ncaa_name.unique()
     return options
 
