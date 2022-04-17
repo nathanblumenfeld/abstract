@@ -16,4 +16,5 @@ urllib3==1.26.8
 requests==2.27.1
 seaborn==0.11.2
 matplotlib==3.5.1
+setuptools
 git+https://github.com/nathanblumenfeld/collegebaseball@v1.1.1-alpha
