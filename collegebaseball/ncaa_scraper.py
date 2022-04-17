@@ -9,25 +9,304 @@ Created by Nathan Blumenfeld in Spring 2022
 import pandas as pd
 import time
 import random
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 import requests
 import numpy as np
+from collegebaseball import datasets
 
 #lookup paths
 _SCHOOL_ID_LU_PATH = 'collegebaseball/data/schools.parquet'
 _SEASON_ID_LU_PATH = 'collegebaseball/data/seasons.parquet'
 _PLAYERS_HISTORY_LU_PATH = 'collegebaseball/data/players_history.parquet'
 _PLAYER_ID_LU_PATH = 'collegebaseball/data/player_id_lookup.parquet'
+_ROSTER_LU_PATH = 'collegebaseball/data/rosters_2013_2022_all.parquet'
 
 #pre-load lookup tables for performance
 _SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
 _SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
 _PLAYERS_HISTORY_LU_DF = pd.read_parquet(_PLAYERS_HISTORY_LU_PATH)
 _PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
+_ROSTER_DF = pd.read_parquet(_ROSTER_LU_PATH)
 
 #GET request options
 _HEADERS = {'User-Agent':'Mozilla/5.0'}
 _TIMEOUT = 0.1
+
+def get_gbg_stats(school=None, player=None, season=None, variant='batting'): 
+    """
+    A function to obtain game-by-game stats for players and teams.
+    Transmits a GET request to stats.ncaa.org, parses game-by-game stats. 
+
+    Args: 
+        school: school name (str) or NCAA school_id (int)
+        player: player name (str) or NCAA stats_player_seq (int)
+        season: season as (int, YYYY) or NCAA season_id (int)
+    
+    Returns: 
+        DataFrame with the following columns:
+        
+        batting
+        -------
+        game_id, date, field, opponent_name, opponent_id, 
+        innings_played, extras, runs_scored, runs_allowed, 
+        run_difference, result, school_id, season_id, batting, GP,
+        BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR, RBI, BB, HBP,
+        SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out, season
+
+        pitching
+        --------
+        game_id, date, field, opponent_name, opponent_id, 
+        innings_played, extras, runs_scored, runs_allowed, 
+        run_difference, result, school_id, season_id, school_id,
+        GP, G, App, GS, ERA, IP, CG, H, R, ER, BB, SO, SHO, BF,
+        P-OAB, 2B-A, 3B-A, Bk, HR-A, WP, HB, IBB, Inh Run,
+        Inh Run Score, SHA, SFA, Pitches, GO, FO, W, L, SV,
+        OrdAppeared, KL, season
+      
+    data from stats.ncaa.org. valid 2019 - 2022. 
+    """
+    # handling all possible inputs
+    # I like the flexibility and intuitiveness this adds
+    if season in range(2013, 2023): 
+        season_ids = lookup_season_ids(season)
+        season_id = season_ids[0]
+    elif season: 
+        season_id = season
+        season_ids = lookup_season_ids_reverse(season_id)
+        season = season_ids[0]
+
+    if player:
+        if type(player) == int:
+            player_id = player
+            try: 
+                player_name, school_name, school_id = lookup_player_reverse(player_id, season)
+            except: 
+                print('no records found')
+                return pd.DataFrame()
+        elif type(player) == str: 
+            player_name = player
+            if school:
+                if type(school) == str: 
+                    school_id = lookup_school_id(school)
+                    school_name = school
+                    player_id = lookup_player_id(player_name, school_name)
+                elif type(school) == int: 
+                    school_id = school
+                    school_name = lookup_school_reverse(school_id)
+                    player_id = lookup_player_id(player_name, school_name)
+            else: 
+                return 'must give a player_id if no school given'               
+    else: 
+        player_name = 'None'
+        player_id = '-100'
+        if type(school) == str: 
+            school_name = school
+            school_id = lookup_school_id(school_name)
+        elif type(school) == int: 
+            school_id = school
+            school_name = lookup_school_reverse(school_id)
+        else:
+            return 'must give a player_id if no school given'       
+    stats_player_seq = str(player_id)
+
+    if variant == 'batting':
+        min_row_length = 30
+        year_stat_category_id = season_ids[1]
+        if season >= 2016: 
+            headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                    'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                    'run_difference', 'result', 'score', 'game_id', 'school_id', \
+                    'G', 'R', 'AB', 'H', '2B', '3B', 'TB', 'HR', 'RBI', 'BB', \
+                    'HBP', 'SF', 'SH', 'K', 'OPP DP', 'CS', 'Picked', 'SB', 'IBB', \
+                    'RBI2out', 'stats_player_seq']
+        elif season >= 2014: 
+            headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                'run_difference', 'result', 'score', 'game_id', 'school_id', \
+                'G', 'R', 'AB', 'H', '2B', '3B', 'TB', 'HR', 'RBI', 'BB', \
+                'HBP', 'SF', 'SH', 'K', 'DP', 'SB', 'CS', 'Picked', 'IBB', \
+                'stats_player_seq']
+        else: 
+            headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                'run_difference', 'result', 'score', 'game_id', 'school_id', \
+                'AB', 'H', 'TB', 'R', '2B', '3B', 'HR', 'RBI', 'BB', 'HBP', \
+                'SF', 'SH', 'K', 'DP', 'SB', 'CS', 'Picked', 'IBB', 'stats_player_seq']
+    else: 
+        min_row_length = 40
+        year_stat_category_id = season_ids[2]
+        headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                'run_difference', 'result', 'score', 'game_id', 'school_id', \
+                'App', 'G', 'GS', 'IP', 'CG', 'H', 'R', 'ER', 'BB', 'SO', \
+                'SHO', 'BF', 'P-OAB', '2B-A', '3B-A', 'Bk', 'HR-A', 'WP', \
+                'HB', 'IBB', 'Inh Run', 'Inh Run Score', 'SHA', 'SFA', \
+                'Pitches', 'GO', 'FO', 'W', 'L', 'SV', 'OrdAppeared', 'KL', \
+                'pickoffs', 'stats_player_seq']
+        if season <= 2019: 
+            headers.remove('pickoffs')
+            if season <= 2015: 
+                headers.remove('CG')
+                if season <= 2014: 
+                    headers.remove('G')
+    try:   
+        payload = {'game_sport_year_ctl_id':str(season_id), 'org_id':str(school_id), \
+            'stats_player_seq':str(stats_player_seq), 'year_stat_category_id':str(year_stat_category_id)}
+        url = 'https://stats.ncaa.org/player/game_by_game?'
+        r = requests.get(url, params=payload, headers=_HEADERS)
+        soup = BeautifulSoup(r.text, features='lxml')
+        table = soup.find_all('table')[3]
+        # this is heinous lol
+        # TODO: make this more readable
+        rows = []
+        for val in table.find_all('tr')[3:]: 
+            data = []
+            for i in val.children:
+                if isinstance(i, Tag):
+                    if 'data-order' in i.attrs:
+                        data.append(i.get('data-order'))
+                    elif i.a:
+                        href = i.find_all('a')[-1].get('href')
+                        if '?' in href:
+                            team_id = href.split('=')[-1]
+                            game_id = href.split('?')[0].split('/')[-1]
+                            score = i.find_all('a')[-1].string.strip()
+                            if 'W' in score: 
+                                result = 'win'
+                                score = score.replace('W', '').strip()
+                            elif 'L' in score: 
+                                result = 'loss'
+                                score = score.replace('L', '').strip()
+                            try:
+                                if '(' in score:
+                                    innings_played = score.split('(')[-1].split(')')[0].strip()
+                                    extras = 'True'
+                                    score = score.split('(')[0].strip()
+                                else: 
+                                    innings_played = '9'
+                                    extras = 'False'
+                                data.append(innings_played)
+                                data.append(extras)
+                                scores = score.split('-')
+                                runs_scored = int(scores[0].strip())
+                                runs_allowed = int(scores[-1].strip())
+                                data.append(runs_scored)
+                                data.append(runs_allowed)
+                                data.append(runs_scored - runs_allowed)
+                            except:
+                                continue
+                            data.append(result)
+                            data.append(score)
+                            data.append(game_id)
+                            data.append(team_id)
+                        else:
+                            try: 
+                                if href.split('/')[1] == 'teams':
+                                    season_id = '-'
+                                    opponent_id = href.split('/')[-1]
+                                elif href.split('/')[-1] == 'box_score':
+                                    game_id = href.split('/')[-2]
+                                    team_id = school_id
+                                    score = i.find_all('a')[-1].string.strip()
+                                    if 'W' in score: 
+                                        result = 'win'
+                                        score = score.replace('W', '').strip()
+                                    elif 'L' in score: 
+                                        result = 'loss'
+                                        score = score.replace('L', '').strip()
+                                    try:
+                                        if '(' in score:
+                                            innings_played = score.split('(')[-1].split(')')[0].strip()
+                                            extras = 'True'
+                                            score = score.split('(')[0].strip()
+                                        else: 
+                                            innings_played = '9'
+                                            extras = 'False'
+                                        data.append(innings_played)
+                                        data.append(extras)
+                                        scores = score.split('-')
+                                        runs_scored = int(scores[0].strip())
+                                        runs_allowed = int(scores[-1].strip())
+                                        data.append(runs_scored)
+                                        data.append(runs_allowed)
+                                        data.append(runs_scored - runs_allowed)
+                                    except:
+                                        continue
+                                    data.append(result)
+                                    data.append(score)
+                                    data.append(game_id)
+                                    data.append(team_id)                
+                                else:    
+                                    season_id = href.split('/')[-1]
+                                    opponent_id = href.split('/')[-2]
+                            except:
+                                continue
+                            if not 'target' in i.find_all('a')[-1].attrs:
+                                opponent = i.find_all('a')[-1].contents[0]
+                                opponent = opponent.string.replace('</br>', '')
+                                opponent = opponent.strip()
+                                if opponent[0] == '@': 
+                                    field = 'away'
+                                    opponent = opponent.split('@')[-1].strip()
+                                elif '@' in opponent:
+                                    field = 'neutral'
+                                else: 
+                                    field = 'home'
+                                data.append(field)
+                                data.append(season_id)
+                                data.append(opponent_id)
+                                data.append(opponent)
+                    else:
+                        date = i.string
+                        if date == 'Opponent Totals':
+                            continue
+                        else:
+                            data.append(date)
+            if len(data) >= min_row_length:
+                if stats_player_seq == '-100':
+                    data.append('-')
+                else:
+                    data.append(int(player_id))
+                rows.append(data)    
+        res = pd.DataFrame(rows, columns=headers)
+        if not player: 
+            res.drop(columns=['stats_player_seq'], inplace=True)
+            if variant == 'pitching': 
+                res.drop(columns=['App'], inplace=True)
+        res = _transform_team_stats(res, variant=variant)
+        return res
+    except: 
+        print(f'''could not retrieve {season} game-by-game {variant} stats for school: {school_name}, player: {player_name}''')
+        return pd.DataFrame()
+
+def get_results(school, season):
+    """
+    A function to retreive information about completed games.
+    Retrieves data of completed games for a given team from stats.ncaa.org. 
+    
+    
+    Args:
+        school: school name (str) or NCAA school_id (int) 
+        season: season (int, YYYY) or NCAA season_id (int)
+    
+    Returns: 
+        DataFrame with the following columns:
+
+        game_id, date, field, opponent_name, opponent_id, 
+        innings_played, extras, runs_scored, runs_allowed, 
+        run_difference, result, school_id, season_id, season
+        
+    data from stats.ncaa.org. valid 2019 - 2022. 
+    """
+    try: 
+        data = get_gbg_stats(school=school, season=season)
+        res = data[['game_id', 'date', 'field', 'opponent_name', 'opponent_id', \
+                    'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                    'run_difference', 'result', 'school_id', 'season_id']] 
+        return res
+    except: 
+        print(f'''could not retrieve results for school: {school}, season: {season}''')
+        return pd.DataFrame()
 
 def get_roster(school, season):     
     """
@@ -40,30 +319,30 @@ def get_roster(school, season):
 
     Returns: 
         DataFrame containing the following columns:
-         -   jersey
-         -   stats_player_seq
-         -   name
-         -   position
-         -   class_year
-         -   games_played
-         -   games_started
-         -   height (if 2019)
+        -   jersey
+        -   stats_player_seq
+        -   name
+        -   position
+        -   class_year
+        -   games_played
+        -   games_started
+        -   height (if 2019)
         
     data from stats.ncaa.org
     """
     # handling the school/school_id input types
     if type(school) is int: 
         school_id = school 
+        school = lookup_school_reverse(school_id)
     elif type(school) is str: 
         school_id = lookup_school_id(school)
-      
     # handling season/season_id input types
     if len(str(season)) == 4: 
         season_id = lookup_season_id(season)
     # get season_id from lookup table
     elif len(str(season)) == 5: 
         season_id = season
-    
+        season = lookup_season_ids_reverse(season_id)[0]
     try: 
         # doesn't take regular params, have to build url manually
         request_body = 'https://stats.ncaa.org/team/'
@@ -76,12 +355,12 @@ def get_roster(school, season):
         if (season in [2019, 14781, 2022, 15860]): 
             num_values = 7
             col_names = ['jersey','stats_player_seq', 'name', 'position', \
-                         'height', 'class_year', 'games_played',\
-                         'games_started']
+                        'height', 'class_year', 'games_played',\
+                        'games_started']
         else:
             num_values = 6
             col_names = ['jersey', 'stats_player_seq', 'name', 'position', \
-                         'class_year', 'games_played', 'games_started']
+                        'class_year', 'games_played', 'games_started']
             
         for index, value in enumerate(soup.find_all('td')):
             # each player has 6 associated values in table
@@ -110,6 +389,14 @@ def get_roster(school, season):
         df.stats_player_seq = df.stats_player_seq.str.replace('=', '')
         df = df.loc[df.stats_player_seq != 'None']
         df.stats_player_seq = df.stats_player_seq.astype('int64')
+        df['season'] = season
+        df['season'] = df['season'].astype('int64')
+        df['season_id'] = season_id 
+        df['season_id'] = df['season_id'].astype('int64')
+        df['school'] = school
+        df['school_id'] = school_id
+        df['school_id'] = df['school_id'].astype('int64')
+        df.name = df.name.apply(_format_names)
         return df
     except:
         print(f'''could not retrieve {season} roster for {school}''')
@@ -127,14 +414,12 @@ def get_multiyear_roster(school, start, end):
     Returns:
         concatenated DataFrame using get_roster across [start, end]
         
-    data from stats.ncaa.org
+    data from stats.ncaa.org. valid 2013 - 2022. 
     """
     roster = pd.DataFrame()
     for season in range(start, end+1):
         try: 
             new = get_roster(school, season) 
-            new.loc[:, 'season'] = season
-            new.loc[:, 'school'] = school
             if 'height' in new.columns: 
                 new.drop(columns=['height'], inplace=True)
             roster = pd.concat([roster, new])
@@ -157,8 +442,20 @@ def get_career_stats(stats_player_seq, variant):
     Returns: 
         DataFrame with the following columns
         
-    
-    data from stats.ncaa.org
+        batting
+        -------
+        school_id, GP, BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR,
+        RBI, BB, HBP, SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out,
+        season
+
+        pitching
+        --------
+        school_id, GP, G, App, GS, ERA, IP, CG, H, R, ER,
+        BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A, WP,
+        HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches, GO,
+        FO, W, L, SV, KL, season
+
+    data from stats.ncaa.org. valid 2013 - 2022.     
     """
     # craft GET request to NCAA site
     season = lookup_seasons_played(stats_player_seq)[0]
@@ -171,7 +468,7 @@ def get_career_stats(stats_player_seq, variant):
         year_stat_category_id = season_ids[2]
     
     payload = {'id':str(season_id), 'stats_player_seq':str(stats_player_seq), \
-               'year_stat_category_id':str(year_stat_category_id)}
+        'year_stat_category_id':str(year_stat_category_id)}
     url = 'https://stats.ncaa.org/player/index'
     # send request
     try:
@@ -268,6 +565,7 @@ def _parse_season(year):
     res = 2000 + int(last_two)
     return res
 
+# TOOD: merge with _transform_team_stats?
 def _transform_career_stats(df):
     """
     A helper function to transform raw data loaded from ncaa with 
@@ -419,9 +717,24 @@ def get_team_stats(school, season, variant):
         variant (str): the type of stats, either 'batting' or 'pitching'
     
     Returns: 
-        DataFrame
+        DataFrame with the following columns:
         
-    data from stats.ncaa.org
+        batting
+        -------
+        Jersey, name, Yr, pos, GP, GS, R, AB, H, 2B, 3B,
+        TB, HR, RBI, BB, HBP, SF, SH, K, OPP DP, CS,
+        Picked, SB, IBB, season, stats_player_seq
+
+
+        pitching
+        --------
+        Jersey, name, Yr, pos, GP, App, ERA, IP, CG, H, R,
+        ER, BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A,
+        WP, HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches,
+        GO, FO, W, L, SV, KL, pickoffs, season, stats_player_seq
+
+        
+    data from stats.ncaa.org. valid 2013 - 2022. 
     """
     if type(school) is int:
         school_id = school
@@ -466,7 +779,7 @@ def get_team_stats(school, season, variant):
         rows = []
         row = []
         i = 0
-
+        player_ids = []
         for child in table.find('tr', 'text').find_all_next('td'):
             if i % len(headers) == 0: 
                 row = []
@@ -475,28 +788,36 @@ def get_team_stats(school, season, variant):
                 row.append(str(child['data-order']).strip())
             else:
                 row.append(str(child.string))
+
+            if child.a:
+                if 'href' in child.a.attrs:
+                    player_ids.append(int(child.a.attrs['href'].split('&')[-1].split('=')[-1]))
+                else:
+                    player_ids.append('-')
             i+=1
 
         df = pd.DataFrame(rows)
         df.columns = headers
-        df['season'] = season
         df = df.loc[(df.Player != 'Opponent Totals') & (df.Player != 'Totals')]
+        df['season'] = season
+        df['stats_player_seq'] = player_ids
         res = _transform_team_stats(df, variant= variant)
         return res
     except: 
         print(f'''Could not find {season} {variant} stats for {school}''')
         return pd.DataFrame()
 
+# TODO: merge with _transform_career_stats?
 def _transform_team_stats(df, variant):
     """
-    A helper function to transform raw data obtained with get_career_stats
+    A helper function to transform raw data obtained with get_career_stats. 
     
     Args:
         df: DataFrame output from get_career_stats function 
         variant: type of stats to transform, either 'batting' or 'pitching'
     
     Returns:
-        DataFrame indexed by stats_player_seq, season_id
+        DataFrame 
     """
     df = _eliminate_dashes(df)
     df.fillna(value = 0.00, inplace = True)
@@ -504,6 +825,24 @@ def _transform_team_stats(df, variant):
     if 'Player' in cols: 
         df.rename(columns={'Player':'name'}, inplace=True)
         cols = df.columns
+    if 'opponent_id' in cols:
+        df['opponent_id'] = df['opponent_id'].astype('int64')
+    if 'season_id' in cols:
+        df['season_id'] = df['season_id'].astype('int64')
+    if 'school_id' in cols:
+        df['school_id'] = df['school_id'].astype('int64')
+    if 'innings_played' in cols:
+        df['innings_played'] = df['innings_played'].astype('int64')
+    if 'extras' in cols:
+        df['extras'] = df['extras'].astype('bool')
+    if 'game_id' in cols:
+        df['game_id'] = df['game_id'].astype('int64')
+    if 'runs_scored' in cols:
+        df['runs_scored'] = df['runs_scored'].astype('int64')
+    if 'runs_allowed' in cols:
+        df['runs_allowed'] = df['runs_allowed'].astype('int64')
+    if 'run_difference' in cols:
+        df['run_difference'] = df['run_difference'].astype('int64')
     if 'name' in cols: 
         df['name'] = df['name'].apply(_format_names)
         df['name'] = df['name'].astype('string')
@@ -514,6 +853,12 @@ def _transform_team_stats(df, variant):
     if 'stats_player_seq' in cols: 
         df.stats_player_seq = df.stats_player_seq.astype('string')
         df.stats_player_seq = df.stats_player_seq.str.replace(r'\D+', '')
+        df.stats_player_seq = df.stats_player_seq.astype('int64')
+    if 'date' in cols: 
+        df['date'] = df['date'].astype('string')
+        df['season'] = df['date'].str[-4:]
+        df['season'] = df['season'].astype('int64')
+
     if 'Year' in cols: 
         df['Year'] = df['Year'].astype('string')
         df['season'] = df['Year'].str[:4]
@@ -647,17 +992,21 @@ def _transform_team_stats(df, variant):
         if 'pickoffs' in cols: 
             df['pickoffs'] = df['pickoffs'].astype('int64')                      
         if 'Pitches' in cols: 
+            df['Pitches'] = df['Pitches'].astype('string')
             df['Pitches'] = df['Pitches'].str.replace(',','')
             df.fillna(value = 0.00, inplace = True)
+            df['Pitches'] = df['Pitches'].astype('float')
             df['Pitches'] = df['Pitches'].astype('int64')
+        if 'OrdAppeared' in cols: 
+            df['OrdAppeared'] = df['OrdAppeared'].astype('int64')
         if 'App' in cols: 
             df['App'] = df['App'].astype('int64')
-        df = df.loc[df.App > 0]
+            df = df.loc[df.App > 0]
     return df
-
+    
 def lookup_season_ids(season):
     """
-    A lookup function for season/batting/pitching ids
+    A function that finds the year_stat_category_ids of a given season.
 
     Args: 
         season (int, YYYY)
@@ -673,8 +1022,7 @@ def lookup_season_ids(season):
 
 def lookup_season_ids_reverse(season_id):
     """
-    A lookup function that returns the season and batting/pitching ids
-    for a given season
+    A function that finds the year_stat_category_ids and season of a season_id.
     
     Args: 
         season_id (int): NCAA season_id
@@ -690,7 +1038,7 @@ def lookup_season_ids_reverse(season_id):
 
 def lookup_season_id(season):
     """
-    A lookup function that returns the season_id for a given season
+    A function that finds the year_stat_category_id's for a given season.
     
     Args: 
         season (int, YYYY)
@@ -704,22 +1052,22 @@ def lookup_season_id(season):
 
 def lookup_seasons_played(stats_player_seq): 
     """
-    A lookup function that gives the first and last seasons played by a
-    given player
+    A function to find the final and debut seasons of a given player. 
     
     Args: 
         stats_player_seq (int): NCAA player_id
-   
+
     Returns: 
         tuple of ints: (debut season, most recent season)
     
     """
-    row = _PLAYERS_HISTORY_LU_DF.loc[_PLAYERS_HISTORY_LU_DF.stats_player_seq == stats_player_seq]
+    df = _PLAYERS_HISTORY_LU_DF
+    row = df.loc[df.stats_player_seq == stats_player_seq]
     return row['debut_season'].values[0], row['season_last'].values[0]
-         
+    
 def lookup_school_id(school):
     """
-    A school_id lookup function
+    A function to find a school's id from it's name.
 
     Args: 
         school (str): the name of the school
@@ -742,7 +1090,7 @@ def lookup_school_id(school):
         
 def lookup_school_reverse(school_id):
     """
-    A function to lookup school name from school_id
+    A function to find a school's name from a school_id. 
 
     Args:
         school_id as int
@@ -751,7 +1099,7 @@ def lookup_school_reverse(school_id):
         school (str): the name of the school
         
     Examples: 
-        lookup_school_id_reverse(167)
+        lookup_school_reverse(167)
         >>> "Cornell"
     """
     school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.school_id == school_id)]
@@ -762,7 +1110,7 @@ def lookup_school_reverse(school_id):
         
 def lookup_player_id(player_name, school):
     """
-    A player_id lookup function
+    A function to find a player's id from their name and school.
     
     Args: 
         player_name (str): name of player to lookup
@@ -783,8 +1131,32 @@ def lookup_player_id(player_name, school):
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else: 
-        return player_row['stats_player_seq'].values[0]
+        res = player_row['stats_player_seq'].values[0]
+        print(res)
+        print(type(res))
+        print(int(res))
+        return int(res)
         
+def lookup_player_reverse(player_id, season):
+    """
+    A function to find a player's name and school from their player_id. 
+    
+    Args: 
+        player_name (str): name of player to lookup
+        school: either the ncaa_name of the school (str) of the player
+        
+    Returns: 
+        The name and school of the player as a strings
 
-
-           
+    Examples: 
+        lookup_player_id("Jake Gelof", "Virginia")
+        >>> 2486499
+    
+    """
+    df = _ROSTER_DF
+    player_row = df.loc[(df.stats_player_seq == player_id) & (df.season == season)]        
+    if len(player_row) == 0:
+        return f'''could not find player {player_name}'''
+    else: 
+        return player_row['name'].values[0], player_row['school'].values[0], player_row['school_id'].values[0]
+        

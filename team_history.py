@@ -19,6 +19,11 @@ def load_games():
     df = pd.read_parquet('collegebaseball/data/games_all_1992_2021.parquet')
     return df
 
+@st.cache()
+def load_results(variant, season): 
+    df = pd.read_parquet('collegebaseball/data/team_gbg_all_'+variant+'_'+season+'.parquet')
+    return df 
+
 def filter_games(school, seasons):
     df = load_games()
     res = df.loc[(df.school == school) & (df.season.isin(seasons))]

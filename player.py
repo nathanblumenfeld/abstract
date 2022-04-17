@@ -8,7 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from hydralit import HydraHeadApp
 
-
 @st.cache(persist=True)
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
@@ -70,6 +69,7 @@ class PlayerApp(HydraHeadApp):
             col3.write('')
             variant = col2.selectbox('Stats Type', options=['batting', 'pitching'], key='team_stats_type')          
             stats = ncaa.get_career_stats(player_id, variant)
+            season = ncaa.lookup_seasons_played(player_id)[0]
             col4.markdown('#')
             submitted = col4.form_submit_button('submit')
         if submitted: 
