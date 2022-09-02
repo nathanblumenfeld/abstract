@@ -1,4 +1,4 @@
-# [![abstract_0 5x](https://user-images.githubusercontent.com/33358095/160667201-a78021e3-8fa1-4149-b634-e543017f772f.png)](https://share.streamlit.io/nathanblumenfeld/abstract/main/app.py)    
+# [![abstract_0 5x](https://user-images.githubusercontent.com/33358095/160667201-a78021e3-8fa1-4149-b634-e543017f772f.png)](https://nathanblumenfeld-abstract--leaderboards-5e6w0h.streamlitapp.com/)    
 ### (a budding sabermetric tool for research of college teams)     
 #### A public Streamlit web app built on top of the [collegebaseball](https://github.com/nathanblumenfeld/collegebaseball) package.
 
